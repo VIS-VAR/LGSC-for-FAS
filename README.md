@@ -41,7 +41,7 @@ FaceForensics/data
 ├── train_val_train.txt
 └── faceforensics_benchmark.txt
 ```
-+ Download and convert [imagenet pretrained model]('https://download.pytorch.org/models/resnet18-5c106cde.pth')
++ Download and convert [imagenet pretrained model](https://download.pytorch.org/models/resnet18-5c106cde.pth)
 ```
 python convert.py
 ```
