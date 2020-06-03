@@ -44,6 +44,10 @@ FaceForensics/data
 + Download and convert [imagenet pretrained model](https://download.pytorch.org/models/resnet18-5c106cde.pth)
 ```
 python convert.py
+
+./pretrained
+├── resnet18-5c106cde.pth
+└── resnet18-torch.pdparams
 ```
 + Train
 ```
