@@ -74,6 +74,7 @@ def eval_metric(results, thr='auto', type='acc', res_dir=None):
         acc=eval_acc,
         acer=eval_acer,
         hter=eval_hter)
+    results = np.array(results)
     if type not in ['acc', 'acer', 'hter']:
         raise NotImplementedError
     elif type == 'hter':
@@ -81,7 +82,6 @@ def eval_metric(results, thr='auto', type='acc', res_dir=None):
         return eval_score
     else:
         eval_tool = eval_tools[type]
-    results = np.array(results)
 
     if isinstance(thr, float):
         results[:, 0] = (results[:, 0] > thr).astype(np.float)
