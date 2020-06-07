@@ -1,7 +1,9 @@
 import os
 import pickle
 import numpy as np
-#import matplotlib.pyplot as plt
+from .util import draw_roc
+from .statistic import get_EER_states, get_HTER_at_thr
+from sklearn.metrics import roc_auc_score
 
 
 def eval_acer(results, is_print=False):
@@ -14,8 +16,8 @@ def eval_acer(results, is_print=False):
     ind_p = (results[:, 1] == 1)
     fp = (results[ind_n, 0] == 1).sum()
     fn = (results[ind_p, 0] == 0).sum()
-    apcer = fp / len(ind_n) * 100
-    bpcer = fn / len(ind_p) * 100
+    apcer = fp / ind_n.sum() * 100
+    bpcer = fn / ind_p.sum() * 100
     acer = (apcer + bpcer) / 2
     if is_print:
         print('***************************************')
@@ -31,19 +33,19 @@ def eval_hter(results, is_print=False):
     :param is_print: print eval score
     :return: score
     """
-    ind_n = (results[:, 1] == 0)
-    ind_p = (results[:, 1] == 1)
-    far = (results[ind_n, 0] == 1).sum()
-    frr = (results[ind_p, 0] == 0).sum()
-    far = far / len(ind_n) * 100
-    frr = frr / len(ind_p) * 100
-    hter = (far + frr) / 2
+    prob_list = results[:, 0]
+    label_list = results[:, 1]
+    cur_EER_valid, threshold, FRR_list, FAR_list = get_EER_states(prob_list, label_list)
+    auc_score = roc_auc_score(label_list, prob_list)
+    draw_roc(FRR_list, FAR_list, auc_score)
+    cur_HTER_valid = get_HTER_at_thr(prob_list, label_list, threshold)
     if is_print:
         print('***************************************')
-        print(' FAE     FRR     HTRE')
-        print('{:.4f}   {:.4f}   {:.4f}'.format(far, frr, hter))
+        print('EER        HTER      AUC        Thr')
+        print('{:.4f}   {:.4f}   {:.4f}    {:.4f}'.format(
+            cur_EER_valid * 100, cur_HTER_valid * 100, auc_score * 100, threshold))
         print('***************************************')
-    return 100 - hter
+    return (1 - cur_HTER_valid) * 100
 
 
 def eval_acc(results, is_print=False):
@@ -72,11 +74,14 @@ def eval_metric(results, thr='auto', type='acc', res_dir=None):
         acc=eval_acc,
         acer=eval_acer,
         hter=eval_hter)
+    results = np.array(results)
     if type not in ['acc', 'acer', 'hter']:
         raise NotImplementedError
+    elif type == 'hter':
+        eval_score = eval_hter(results, is_print=True)
+        return eval_score
     else:
         eval_tool = eval_tools[type]
-    results = np.array(results)
 
     if isinstance(thr, float):
         results[:, 0] = (results[:, 0] > thr).astype(np.float)
@@ -115,24 +120,4 @@ def eval_metric(results, thr='auto', type='acc', res_dir=None):
     return eval_score
 
 
-#def Vis_Results(results, result_dir):
-#    living = []
-#    spoofing = []
-#    for res in results:
-#        if int(res[1]) == 1:
-#            living.append(res[2])
-#        else:
-#            spoofing.append(res[2])
-#    minb = min(living+spoofing)
-#    maxb = max(living+spoofing)
-#    bins = np.linspace(minb, maxb, 80)
-#    plt.figure(1)
-#    plt.title(' ')
-#    plt.hist(living, bins, facecolor='g', edgecolor="black", alpha=0.5, label='living')
-#    plt.hist(spoofing, bins, facecolor='r', edgecolor="black", alpha=0.5, label='spoofing')
-#    plt.legend()
-#    plt.xlabel('Threshold')
-#    plt.ylabel('Number Sample')
-#    plt.savefig(os.path.join(result_dir, 'VR4@1_test.png'))
-#    # plt.show()
 
