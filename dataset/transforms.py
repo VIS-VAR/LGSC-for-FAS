@@ -187,6 +187,33 @@ class RandomCrop(object):
             return img, label
 
 
+class RandomPatch(object):
+    def __init__(self,
+                 range_w=(0.3, 0.8),
+                 range_h=(0.2, 0.7),
+                 size=112):
+        self.range_w = range_w
+        self.range_h = range_h
+        self.size = size
+
+    def __call__(self, img, mask=None, label=None):
+        h, w = img.shape[0], img.shape[1]
+        xmin, ymin = int(w * self.range_w[0]), int(h * self.range_h[0])
+        xmax, ymax = int(w * self.range_w[1]), int(h * self.range_h[1])
+        x_start = np.random.randint(xmin, xmax)
+        y_start = np.random.randint(ymin, ymax)
+        x1 = max(x_start - self.size, 0)
+        y1 = max(y_start - self.size, 0)
+        x2 = min(x_start + self.size, w)
+        y2 = min(y_start + self.size, h)
+        img = img[y1:y2, x1:x2, :]
+        if mask is not None:
+            mask = mask[y1:y2, x1:x2, :]
+            return img, mask, label
+        else:
+            return img, label
+
+
 class ExtraAugmentation(object):
 
     def __init__(self,
@@ -194,7 +221,8 @@ class ExtraAugmentation(object):
                  random_erasing=None,
                  random_cutout=None,
                  ramdom_rotate=None,
-                 ramdom_crop=None):
+                 ramdom_crop=None,
+                 ramdom_patch=None):
         self.transforms = []
         if photo_metric_distortion is not None:
             self.transforms.append(
@@ -211,6 +239,9 @@ class ExtraAugmentation(object):
         if ramdom_crop is not None:
             self.transforms.append(
                 RandomCrop(**ramdom_crop))
+        if ramdom_patch is not None:
+            self.transforms.append(
+                RandomPatch(**ramdom_patch))
 
     def __call__(self, img, mask=None, label=None):
         for tranform in self.transforms:

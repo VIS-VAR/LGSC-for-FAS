@@ -140,6 +140,7 @@ class Runnner(object):
             self.model.eval()
             test_loader = paddle.batch(self.dataset.test(), batch_size=self.val_batch_size, drop_last=False)
             for iter, datas in enumerate(test_loader()):
+                batch_size = len(datas)
                 imgs = np.array([data[0] for data in datas]).astype(np.float32)
                 label = np.array([data[1] for data in datas]).astype(np.int64).reshape(-1, 1)
                 imgs = fluid.dygraph.to_variable(imgs)
@@ -147,7 +148,7 @@ class Runnner(object):
                 label.stop_gradient = True
                 
                 cue = self.model(imgs, label, return_loss=False)
-                for i in range(self.val_batch_size):
+                for i in range(batch_size):
                     score = 1 - cue[i, ...].mean()
                     results.append([score, label.numpy()[i, 0]])
 
@@ -162,6 +163,7 @@ class Runnner(object):
         self.model.eval()
         test_loader = paddle.batch(self.val_dataset.test(), batch_size=self.val_batch_size, drop_last=False)
         for iter, datas in enumerate(test_loader()):
+            batch_size = len(datas)
             imgs = np.array([data[0] for data in datas]).astype(np.float32)
             label = np.array([data[1] for data in datas]).astype(np.int64).reshape(-1, 1)
             imgs = fluid.dygraph.to_variable(imgs)
@@ -169,7 +171,7 @@ class Runnner(object):
             label.stop_gradient = True
 
             cue = self.model(imgs, label, return_loss=False)
-            for i in range(self.val_batch_size):
+            for i in range(batch_size):
                 score = 1 - cue[i, ...].mean()
                 results.append([score, label.numpy()[i, 0]])
         self.model.train()
