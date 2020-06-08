@@ -19,12 +19,10 @@ class OULU(DatasetBase):
                  extra_aug=None,
                  test_mode=False,
                  val_mode=False,
-                 prot='Prot.1',
-                 crop_face=False):
+                 prot='Prot.1'):
         assert prot in self.Prot, 'prot must in {}'.format(self.Prot)
         self.prot = prot
         self.val_mode = val_mode
-        self.crop_face = crop_face
         super(OULU, self).__init__(
             img_prefix,
             ann_file,
@@ -71,7 +69,7 @@ class OULU(DatasetBase):
         for img_dict in img_dict_list:
             frames = img_dict['frames'][5:6] if self.test_mode or self.val_mode else img_dict['frames']
             for i, frame in enumerate(frames):
-                if not sum(img_dict['eye'][i]):
+                if not sum(img_dict['eye'][i]) and not self.val_mode and not self.test_mode:
                     continue
                 if img_dict['label'] == 1:
                     pos_infos.append(dict(
@@ -103,14 +101,11 @@ class OULU(DatasetBase):
                 len(img_infos), len(pos_infos), len(neg_infos)))
             return img_infos
 
-    def _get_face(self, img, eye, thr=1.0):
+    def _get_patch(self, img, size=224):
         h, w, _ = img.shape
-        eye = np.array(eye)
-        left_eye, right_eye = eye[0:2], eye[2:4]
-        center = (left_eye + right_eye) / 2
-        dist = np.abs(right_eye[0] - left_eye[0])
-        x1, x2 = max(0, int(center[0] - dist * thr)), min(w, int(center[0] + dist * thr))
-        y1, y2 = max(0, int(center[1] - 1.1 * dist * thr)), min(h, int(center[1] + 1.6 * dist * thr))
+        center = [w/2, h/2]
+        x1, x2 = max(0, int(center[0] - size/2)), min(w, int(center[0] + size/2))
+        y1, y2 = max(0, int(center[1] - size/2)), min(h, int(center[1] + size/2))
         img = img[y1:y2, x1:x2, :]
 
         return img
@@ -136,9 +131,6 @@ class OULU(DatasetBase):
                 label = img_info['label']
                 label = 0 if label > 1 else 1
                 img = cv2.imread(img_path)
-
-                if self.crop_face:
-                    img = self._get_face(img, img_info['eye'], thr=1.2)
 
                 img = img.astype(np.float32)
                 mask = np.zeros_like(img)
@@ -166,8 +158,7 @@ class OULU(DatasetBase):
                 label = 0 if label > 1 else 1
                 img = cv2.imread(img_path)
 
-                if self.crop_face:
-                    img = self._get_face(img, img_info['eye'], thr=1.2)
+                # img = self._get_patch(img, size=self.img_scale[0])
 
                 img = self.img_transform(img, self.img_scale)
                 yield img, label
