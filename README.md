@@ -11,7 +11,7 @@ ___
 ## FaceForensics Benchmark
 
 Based on the **LGSC**, we achieved **1st Place** on [FaceForensics benchmark](http://kaldir.vc.in.tum.de/faceforensics_benchmark/)
-![FaceforensicsBenchmark](imgs/ff.png)
+![FaceforensicsBenchmark](imgs/f.png)
 
 ### Dataset and Preprocessing
 We use two different compression rates: c23(medium compression) and c40(high compression) videos in [FaceForensics++](http://www.niessnerlab.org/projects/roessler2019faceforensicspp.html)
