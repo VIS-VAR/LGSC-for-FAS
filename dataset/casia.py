@@ -48,9 +48,9 @@ class CASIA(DatasetBase):
                                         'profile', img_info['frames'][0])
                 label = img_info['labels'][0]
                 img = cv2.imread(img_path)
-                img, mask = self._get_mask(img, thr=2, crop=True)
-
                 img = img.astype(np.float32)
+                mask = np.zeros_like(img)
+                
                 img, mask, label = self.extra_aug(img, mask=mask, label=label)
 
                 flip = True if np.random.rand() < 0.5 else False
